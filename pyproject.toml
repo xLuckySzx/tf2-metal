@@ -1,0 +1,12 @@
+[project]
+name = "tf2-metal"
+version = "0.1.0"
+description = "A pure Python library for Team Fortress 2 currency parsing, manipulation, and conversion."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+license = {text = "MIT"}
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+

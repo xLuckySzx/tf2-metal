@@ -1,0 +1,61 @@
+import pytest
+from tf2_metal.currency import TF2Currency
+
+@pytest.fixture(autouse=True)
+def reset_class_vars():
+    yield
+    TF2Currency.key_price_ref = 0.0
+
+def test_str_full_components():
+    TF2Currency.set_key_price_metal(18.0)
+    curr = TF2Currency(keys=2, metal=12.5)
+    s = str(curr)
+    assert "2 keys" in s
+    assert "12 ref" in s
+    assert "1 reclaimed" in s
+    assert "1 scrap" in s
+    assert "1 weapon" in s
+
+def test_str_partial():
+    curr = TF2Currency(metal=1.0 + 2/18)
+    assert str(curr) == "1 ref, 1 scrap"
+
+def test_str_singular_key():
+    TF2Currency.set_key_price_metal(18.0)
+    curr = TF2Currency(keys=1)
+    s = str(curr)
+    assert "1 key" in s
+    assert "1 keys" not in s
+
+def test_str_singular_weapon():
+    curr = TF2Currency(metal=1.0 + 1/18)
+    s = str(curr)
+    assert "1 weapon" in s
+    assert "1 weapons" not in s
+
+def test_str_singular_ref():
+    curr = TF2Currency(metal=1.0)
+    assert str(curr) == "1 ref"
+
+def test_str_singular_scrap():
+    curr = TF2Currency(metal=1.0 + 2/18)
+    s = str(curr)
+    assert "1 scrap" in s
+    assert "1 scraps" not in s
+
+def test_str_singular_reclaimed():
+    curr = TF2Currency(metal=1.0 + 6/18)
+    s = str(curr)
+    assert "1 reclaimed" in s
+
+def test_str_sub_ref():
+    curr = TF2Currency(metal=0.33)
+    assert str(curr) in ("0.33 ref", "0.3333333333333333 ref")
+
+def test_str_negative():
+    curr = TF2Currency(metal=-1.0)
+    assert "-1 ref" in str(curr)
+
+def test_str_zero():
+    curr = TF2Currency()
+    assert str(curr) == "0 ref"
