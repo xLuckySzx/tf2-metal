@@ -213,7 +213,7 @@ class TF2Currency:
         pattern = re.compile(
             r"^\s*(?:(?P<keys>-?\d+(?:\.\d+)?)\s*(?:k|key|keys))?"
             r"(?:,?\s*)?"
-            r"(?:(?P<metal>-?\d+(?:\.\d+)?)\s*(?:ref|metal))?\s*$",
+            r"(?:(?P<metal>-?\d+(?:\.\d+)?)\s*(?:ref|metal|refined|refs|refineds))?\s*$",
             re.IGNORECASE
         )
         match = pattern.match(s)
