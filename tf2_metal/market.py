@@ -19,12 +19,14 @@ class TF2Market:
         if value < 0 or math.isnan(value) or math.isinf(value):
             raise TF2ValidationError(f"{name} must be a finite non-negative number.")
 
-    def update_prices(self, new_ref: float, new_usd: float) -> None:
+    def update_prices(self, new_ref: float | None = None, new_usd: float | None = None) -> None:
         """Update the market prices for the factory."""
-        self._validate_price(new_ref, "new_ref")
-        self._validate_price(new_usd, "new_usd")
-        self.key_price_ref = new_ref
-        self.key_price_usd = new_usd
+        if new_ref is not None:
+            self._validate_price(new_ref, "new_ref")
+            self.key_price_ref = new_ref
+        if new_usd is not None:
+            self._validate_price(new_usd, "new_usd")
+            self.key_price_usd = new_usd
 
     def create(self, keys: int = 0, metal: float = 0.0, rounding_mode: RoundingMode = RoundingMode.ROUND) -> TF2Currency:
         """Create a new TF2Currency instance with the current market prices."""

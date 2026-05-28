@@ -23,6 +23,14 @@ def test_market_update_prices():
     market.update_prices(70.11, 1.90)
     assert market.key_price_ref == 70.11
     assert market.key_price_usd == 1.90
+    
+    market.update_prices(new_ref=65.0)
+    assert market.key_price_ref == 65.0
+    assert market.key_price_usd == 1.90
+    
+    market.update_prices(new_usd=2.0)
+    assert market.key_price_ref == 65.0
+    assert market.key_price_usd == 2.0
 
 def test_market_update_prices_invalid():
     market = TF2Market()
