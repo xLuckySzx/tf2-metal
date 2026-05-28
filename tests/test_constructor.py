@@ -71,3 +71,26 @@ def test_from_weapons():
     assert curr2.keys == 0
     assert curr2.metal == 67.0
     assert curr2._weapons == 1206
+
+def test_to_weapons_edge_cases():
+    assert TF2Currency(metal=0.0).to_weapons() == 0
+    assert TF2Currency(keys=-1, metal=-1.0, key_price_ref=66.0).to_weapons() == -1206
+    
+    curr = TF2Currency(metal=0.0)
+    curr = curr + TF2Currency(metal=0.11)
+    assert curr.to_weapons() == 2
+
+def test_from_weapons_edge_cases():
+    curr = TF2Currency.from_weapons(0)
+    assert curr.keys == 0
+    assert curr.metal == 0.0
+    assert curr._weapons == 0
+    
+    curr2 = TF2Currency.from_weapons(-18)
+    assert curr2.keys == 0
+    assert curr2.metal == -1.0
+    assert curr2._weapons == -18
+    
+    curr3 = TF2Currency.from_weapons(1800000)
+    assert curr3.metal == 100000.0
+    assert curr3._weapons == 1800000
