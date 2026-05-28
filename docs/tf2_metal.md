@@ -15,13 +15,15 @@ from tf2_metal import TF2Currency, RoundingMode, TF2MetalError, TF2ValidationErr
 ## 3. Class: `TF2Market` (Factory Pattern)
 
 `TF2Market` is the recommended way to instantiate `TF2Currency` objects. It holds the current market prices and injects them automatically.
+`key_price_ref` is strictly required upon initialization. `key_price_usd` is always optional (defaults to `None`).
 
 ### 3.1 Setup & Updates
 ```python
 market = TF2Market(key_price_ref=65.0, key_price_usd=1.85)
 
-# Update prices later
-market.update_prices(new_ref=65.11, new_usd=1.84)
+# Update prices later (arguments are optional, updates only what you provide)
+market.update_prices(new_ref=65.11)
+market.update_prices(new_usd=1.84)
 ```
 
 ### 3.2 Factory Methods

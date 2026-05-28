@@ -68,8 +68,9 @@ data = remaining.to_dict()
 print(data) 
 # Output: {'keys': 8, 'metal': 56.77}
 
-# 6. Update prices later when the market changes
-market.update_prices(new_ref=65.11, new_usd=1.84)
+# 6. Update prices later when the market changes (only updates what you pass)
+market.update_prices(new_ref=65.11)
+market.update_prices(new_usd=1.84)
 ```
 
 ## 🔐 Type Safety & Consistency
