@@ -7,11 +7,12 @@ def test_imports():
         from tf2_metal import RoundingMode
         from tf2_metal import TF2MetalError
         from tf2_metal import TF2ValidationError
+        from tf2_metal import TF2Market
     except ImportError as e:
         pytest.fail(f"ImportError raised unexpectedly: {e}")
 
 def test_all_contains_exact_symbols():
-    expected = ["TF2Currency", "RoundingMode", "TF2MetalError", "TF2ValidationError"]
+    expected = ["TF2Currency", "RoundingMode", "TF2MetalError", "TF2ValidationError", "TF2Market"]
     assert sorted(tf2_metal.__all__) == sorted(expected)
 
 def test_no_private_symbols_in_all():
@@ -21,7 +22,7 @@ def test_no_private_symbols_in_all():
 def test_star_import():
     namespace = {}
     exec("from tf2_metal import *", namespace)
-    expected = ["TF2Currency", "RoundingMode", "TF2MetalError", "TF2ValidationError"]
+    expected = ["TF2Currency", "RoundingMode", "TF2MetalError", "TF2ValidationError", "TF2Market"]
     for sym in expected:
         assert sym in namespace
     

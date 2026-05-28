@@ -1,14 +1,10 @@
 import pytest
 from tf2_metal.currency import TF2Currency
 
-@pytest.fixture(autouse=True)
-def reset_class_vars():
-    yield
-    TF2Currency.key_price_ref = 0.0
+
 
 def test_str_full_components():
-    TF2Currency.set_key_price_metal(18.0)
-    curr = TF2Currency(keys=2, metal=12.5)
+    curr = TF2Currency(keys=2, metal=12.5, key_price_ref=18.0)
     s = str(curr)
     assert "2 keys" in s
     assert "12 ref" in s
@@ -21,8 +17,7 @@ def test_str_partial():
     assert str(curr) == "1 ref, 1 scrap"
 
 def test_str_singular_key():
-    TF2Currency.set_key_price_metal(18.0)
-    curr = TF2Currency(keys=1)
+    curr = TF2Currency(keys=1, key_price_ref=18.0)
     s = str(curr)
     assert "1 key" in s
     assert "1 keys" not in s

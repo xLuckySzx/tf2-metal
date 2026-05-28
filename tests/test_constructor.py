@@ -6,18 +6,14 @@ from tf2_metal.currency import TF2Currency
 from tf2_metal.constants import RoundingMode
 from tf2_metal.exceptions import TF2ValidationError
 
-@pytest.fixture(autouse=True)
-def reset_class_vars():
-    yield
-    TF2Currency.key_price_ref = 0.0
+
 
 def test_nominal_construction_metal_only():
     curr = TF2Currency(metal=18.0)
     assert curr._weapons == 324
 
 def test_nominal_construction_with_keys():
-    TF2Currency.set_key_price_metal(66.0)
-    curr = TF2Currency(keys=1)
+    curr = TF2Currency(keys=1, key_price_ref=66.0)
     assert curr._weapons == 1188
 
 def test_metal_to_weapons_rounding():
@@ -56,6 +52,5 @@ def test_negative_values():
     curr1 = TF2Currency(metal=-1.33)
     assert curr1._weapons < 0
 
-    TF2Currency.set_key_price_metal(66.0)
-    curr2 = TF2Currency(keys=-1, metal=0.0)
+    curr2 = TF2Currency(keys=-1, metal=0.0, key_price_ref=66.0)
     assert curr2._weapons < 0

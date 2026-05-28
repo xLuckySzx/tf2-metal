@@ -3,10 +3,7 @@ from tf2_metal.currency import TF2Currency
 from tf2_metal.constants import RoundingMode
 from tf2_metal.exceptions import TF2ValidationError
 
-@pytest.fixture(autouse=True)
-def reset_class_vars():
-    yield
-    TF2Currency.key_price_ref = 0.0
+
 
 def test_from_string_metal_only():
     curr = TF2Currency.from_string("13.33 ref")
@@ -14,26 +11,22 @@ def test_from_string_metal_only():
     assert curr.metal == 13.33
 
 def test_from_string_keys_only():
-    TF2Currency.set_key_price_metal(66.0)
-    curr = TF2Currency.from_string("2 keys")
+    curr = TF2Currency.from_string("2 keys", key_price_ref=66.0)
     assert curr.keys == 2
     assert curr.metal == 0.0
 
 def test_from_string_keys_and_metal():
-    TF2Currency.set_key_price_metal(66.0)
-    curr = TF2Currency.from_string("2k, 5 ref")
+    curr = TF2Currency.from_string("2k, 5 ref", key_price_ref=66.0)
     assert curr.keys == 2
     assert curr.metal == 5.0
 
 def test_from_string_alternative_format():
-    TF2Currency.set_key_price_metal(66.0)
-    curr = TF2Currency.from_string("2 keys 1.33 metal")
+    curr = TF2Currency.from_string("2 keys 1.33 metal", key_price_ref=66.0)
     assert curr.keys == 2
     assert curr.metal == 1.33
 
 def test_from_string_fractional_keys():
-    TF2Currency.set_key_price_metal(66.0)
-    curr = TF2Currency.from_string("1.5 keys")
+    curr = TF2Currency.from_string("1.5 keys", key_price_ref=66.0)
     assert curr._weapons == 1782
 
 def test_from_string_empty():
@@ -58,10 +51,9 @@ def test_from_string_rounding_mode():
     assert curr._weapons == 25
 
 def test_from_string_negative_values():
-    TF2Currency.set_key_price_metal(66.0)
-    curr = TF2Currency.from_string("-2 keys, -1.33 ref")
+    curr = TF2Currency.from_string("-2 keys, -1.33 ref", key_price_ref=66.0)
     assert curr.keys == -2
     assert curr.metal == -1.33
     
-    curr2 = TF2Currency.from_string("-1.5 keys")
+    curr2 = TF2Currency.from_string("-1.5 keys", key_price_ref=66.0)
     assert curr2._weapons == -1782

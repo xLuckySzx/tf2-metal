@@ -1,10 +1,7 @@
 import pytest
 from tf2_metal.currency import TF2Currency
 
-@pytest.fixture(autouse=True)
-def reset_class_vars():
-    yield
-    TF2Currency.key_price_ref = 0.0
+
 
 def test_breakdown_nominal_metal():
     curr = TF2Currency(metal=1.0)
@@ -15,8 +12,7 @@ def test_breakdown_all_components():
     assert curr.breakdown() == {"refined": 1, "reclaimed": 1, "scrap": 1, "weapons": 1}
 
 def test_breakdown_with_keys():
-    TF2Currency.set_key_price_metal(18.0)
-    curr = TF2Currency(keys=1)
+    curr = TF2Currency(keys=1, key_price_ref=18.0)
     bd = curr.breakdown()
     assert "keys" in bd
     assert bd["keys"] == 1
