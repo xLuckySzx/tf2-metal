@@ -61,3 +61,13 @@ def test_to_weapons():
     
     curr2 = TF2Currency(keys=1, metal=1.0, key_price_ref=66.0)
     assert curr2.to_weapons() == 1206
+
+def test_from_weapons():
+    curr = TF2Currency.from_weapons(18)
+    assert curr.keys == 0
+    assert curr.metal == 1.0
+    
+    curr2 = TF2Currency.from_weapons(1206, key_price_ref=66.0)
+    assert curr2.keys == 0
+    assert curr2.metal == 67.0
+    assert curr2._weapons == 1206

@@ -56,3 +56,12 @@ class TF2Market:
             key_price_ref=self.key_price_ref,
             key_price_usd=self.key_price_usd
         )
+
+    def from_weapons(self, weapons: int, rounding_mode: RoundingMode = RoundingMode.ROUND) -> TF2Currency:
+        """Create a TF2Currency from a total weapon count with the current market prices."""
+        return TF2Currency.from_weapons(
+            weapons,
+            rounding_mode=rounding_mode,
+            key_price_ref=self.key_price_ref,
+            key_price_usd=self.key_price_usd
+        )

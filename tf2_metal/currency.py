@@ -108,7 +108,7 @@ class TF2Currency:
         return ", ".join(components)
 
     @classmethod
-    def _from_weapons(cls, weapons: int, rounding_mode: RoundingMode, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
+    def from_weapons(cls, weapons: int, rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
         from tf2_metal.constants import WEAPONS_PER_REF
         inst = cls.__new__(cls)
         object.__setattr__(inst, "keys", 0)
@@ -134,14 +134,14 @@ class TF2Currency:
             return NotImplemented
         res_ref, res_usd = self._check_prices(other)
         new_weapons = self._weapons + other._weapons
-        return self._from_weapons(new_weapons, self.rounding_mode, res_ref, res_usd)
+        return self.from_weapons(new_weapons, self.rounding_mode, res_ref, res_usd)
 
     def __sub__(self, other: "TF2Currency") -> "TF2Currency":
         if not isinstance(other, TF2Currency):
             return NotImplemented
         res_ref, res_usd = self._check_prices(other)
         new_weapons = self._weapons - other._weapons
-        return self._from_weapons(new_weapons, self.rounding_mode, res_ref, res_usd)
+        return self.from_weapons(new_weapons, self.rounding_mode, res_ref, res_usd)
 
     def __mul__(self, scalar: int | float) -> "TF2Currency":
         if not isinstance(scalar, (int, float)):
@@ -161,7 +161,7 @@ class TF2Currency:
         else:
             raise ValueError(f"Unsupported rounding mode: {self.rounding_mode}")
             
-        return self._from_weapons(new_weapons, self.rounding_mode, self.key_price_ref, self.key_price_usd)
+        return self.from_weapons(new_weapons, self.rounding_mode, self.key_price_ref, self.key_price_usd)
 
     def __rmul__(self, scalar: int | float) -> "TF2Currency":
         return self.__mul__(scalar)
@@ -186,7 +186,7 @@ class TF2Currency:
         else:
             raise ValueError(f"Unsupported rounding mode: {self.rounding_mode}")
             
-        return self._from_weapons(new_weapons, self.rounding_mode, self.key_price_ref, self.key_price_usd)
+        return self.from_weapons(new_weapons, self.rounding_mode, self.key_price_ref, self.key_price_usd)
 
     def __lt__(self, other: "TF2Currency") -> bool:
         if not isinstance(other, TF2Currency):
