@@ -9,9 +9,10 @@ class TF2Market:
     This eliminates the need to pass key prices manually every time you instantiate a currency.
     """
 
-    def __init__(self, key_price_ref: float = 0.0, key_price_usd: float = 0.0):
+    def __init__(self, key_price_ref: float, key_price_usd: float | None = None):
         self._validate_price(key_price_ref, "key_price_ref")
-        self._validate_price(key_price_usd, "key_price_usd")
+        if key_price_usd is not None:
+            self._validate_price(key_price_usd, "key_price_usd")
         self.key_price_ref = key_price_ref
         self.key_price_usd = key_price_usd
 

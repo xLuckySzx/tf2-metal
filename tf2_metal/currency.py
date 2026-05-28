@@ -13,7 +13,7 @@ class TF2Currency:
     rounding_mode: RoundingMode = RoundingMode.ROUND
 
     key_price_ref: float = 0.0
-    key_price_usd: float = 0.0
+    key_price_usd: float | None = None
 
     @staticmethod
     def metal_to_weapons(metal: float, rounding_mode: RoundingMode) -> int:
@@ -33,7 +33,7 @@ class TF2Currency:
             raise TF2ValidationError("Cannot specify keys when key_price_ref is not set.")
         if self.key_price_ref < 0 or math.isnan(self.key_price_ref) or math.isinf(self.key_price_ref):
             raise TF2ValidationError("key_price_ref must be a finite non-negative number.")
-        if self.key_price_usd < 0 or math.isnan(self.key_price_usd) or math.isinf(self.key_price_usd):
+        if self.key_price_usd is not None and (self.key_price_usd < 0 or math.isnan(self.key_price_usd) or math.isinf(self.key_price_usd)):
             raise TF2ValidationError("key_price_usd must be a finite non-negative number.")
             
         key_price_in_weapons = 0
@@ -110,7 +110,7 @@ class TF2Currency:
         return ", ".join(components)
 
     @classmethod
-    def _from_weapons(cls, weapons: int, rounding_mode: RoundingMode, key_price_ref: float = 0.0, key_price_usd: float = 0.0) -> "TF2Currency":
+    def _from_weapons(cls, weapons: int, rounding_mode: RoundingMode, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
         from tf2_metal.constants import WEAPONS_PER_REF
         inst = cls.__new__(cls)
         object.__setattr__(inst, "keys", 0)
@@ -124,11 +124,11 @@ class TF2Currency:
     def _check_prices(self, other: "TF2Currency") -> tuple[float, float]:
         if self.key_price_ref != 0.0 and other.key_price_ref != 0.0 and self.key_price_ref != other.key_price_ref:
             raise TF2ValidationError("Cannot perform operations on currencies with different key prices.")
-        if self.key_price_usd != 0.0 and other.key_price_usd != 0.0 and self.key_price_usd != other.key_price_usd:
+        if self.key_price_usd is not None and other.key_price_usd is not None and self.key_price_usd != other.key_price_usd:
             raise TF2ValidationError("Cannot perform operations on currencies with different USD prices.")
         
         res_ref = self.key_price_ref if self.key_price_ref != 0.0 else other.key_price_ref
-        res_usd = self.key_price_usd if self.key_price_usd != 0.0 else other.key_price_usd
+        res_usd = self.key_price_usd if self.key_price_usd is not None else other.key_price_usd
         return res_ref, res_usd
 
     def __add__(self, other: "TF2Currency") -> "TF2Currency":
@@ -211,7 +211,7 @@ class TF2Currency:
         return self._weapons >= other._weapons
 
     @staticmethod
-    def from_string(s: str, rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float = 0.0) -> "TF2Currency":
+    def from_string(s: str, rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
         if not s or not s.strip():
             raise TF2ValidationError("String cannot be empty or whitespace only.")
             
@@ -260,7 +260,7 @@ class TF2Currency:
         return {"keys": keys, "metal": metal}
 
     @classmethod
-    def from_dict(cls, data: dict[str, int | float], rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float = 0.0) -> "TF2Currency":
+    def from_dict(cls, data: dict[str, int | float], rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
         if "keys" not in data:
             raise TF2ValidationError("Missing 'keys' field in dict.")
         if "metal" not in data:

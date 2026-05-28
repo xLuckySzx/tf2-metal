@@ -12,13 +12,13 @@ def test_market_initialization_invalid():
     with pytest.raises(TF2ValidationError):
         TF2Market(key_price_ref=-1.0)
     with pytest.raises(TF2ValidationError):
-        TF2Market(key_price_usd=float('inf'))
+        TF2Market(key_price_ref=65.0, key_price_usd=float('inf'))
     with pytest.raises(TF2ValidationError):
         TF2Market(key_price_ref=float('nan'))
 
 def test_market_update_prices():
-    market = TF2Market()
-    assert market.key_price_ref == 0.0
+    market = TF2Market(key_price_ref=65.0)
+    assert market.key_price_ref == 65.0
     
     market.update_prices(70.11, 1.90)
     assert market.key_price_ref == 70.11
@@ -33,7 +33,7 @@ def test_market_update_prices():
     assert market.key_price_usd == 2.0
 
 def test_market_update_prices_invalid():
-    market = TF2Market()
+    market = TF2Market(key_price_ref=65.0)
     with pytest.raises(TF2ValidationError):
         market.update_prices(-5.0, 1.85)
     with pytest.raises(TF2ValidationError):
