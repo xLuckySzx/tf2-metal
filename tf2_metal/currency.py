@@ -1,7 +1,5 @@
 import math
 from dataclasses import dataclass
-from typing import ClassVar
-
 from tf2_metal.constants import RoundingMode, WEAPONS_PER_REF
 from tf2_metal.exceptions import TF2ValidationError
 
