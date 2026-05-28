@@ -54,3 +54,10 @@ def test_negative_values():
 
     curr2 = TF2Currency(keys=-1, metal=0.0, key_price_ref=66.0)
     assert curr2._weapons < 0
+
+def test_to_weapons():
+    curr = TF2Currency(metal=1.0)
+    assert curr.to_weapons() == 18
+    
+    curr2 = TF2Currency(keys=1, metal=1.0, key_price_ref=66.0)
+    assert curr2.to_weapons() == 1206

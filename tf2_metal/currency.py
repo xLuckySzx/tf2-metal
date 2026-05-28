@@ -240,6 +240,9 @@ class TF2Currency:
         
         return TF2Currency(keys=int_keys, metal=final_metal, rounding_mode=rounding_mode, key_price_ref=key_price_ref, key_price_usd=key_price_usd)
 
+    def to_weapons(self) -> int:
+        return self._weapons
+
     def to_dict(self) -> dict[str, int | float]:
         from tf2_metal.constants import WEAPONS_PER_REF
         
