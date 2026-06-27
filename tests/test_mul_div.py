@@ -7,48 +7,48 @@ from tf2_metal.exceptions import TF2ValidationError
 def test_mul_positive_int():
     a = TF2Currency(metal=1.0)
     b = a * 3
-    assert b._weapons == 54
+    assert b.to_weapons(66.0) == 54
 
 def test_mul_positive_float_rounding():
     a = TF2Currency(metal=1.0, rounding_mode=RoundingMode.ROUND)
-    assert (a * 1.5)._weapons == 27
-    assert (a * 1.4)._weapons == 25
+    assert (a * 1.5).to_weapons(66.0) == 27
+    assert (a * 1.4).to_weapons(66.0) == 25
     
     b = TF2Currency(metal=1.0, rounding_mode=RoundingMode.FLOOR)
-    assert (b * 1.4)._weapons == 25
+    assert (b * 1.4).to_weapons(66.0) == 25
     
     c = TF2Currency(metal=1.0, rounding_mode=RoundingMode.CEIL)
-    assert (c * 1.4)._weapons == 26
+    assert (c * 1.4).to_weapons(66.0) == 26
 
 def test_mul_negative():
     a = TF2Currency(metal=1.0)
     b = a * -1
-    assert b._weapons == -18
+    assert b.to_weapons(66.0) == -18
 
 def test_mul_zero():
     a = TF2Currency(metal=1.0)
     b = a * 0
-    assert b._weapons == 0
+    assert b.to_weapons(66.0) == 0
 
 def test_rmul():
     a = TF2Currency(metal=1.0)
-    assert (2 * a)._weapons == (a * 2)._weapons
+    assert (2 * a).to_weapons(66.0) == (a * 2).to_weapons(66.0)
 
 def test_div_positive_int():
     a = TF2Currency(metal=2.0)
     b = a / 2
-    assert b._weapons == 18
+    assert b.to_weapons(66.0) == 18
 
 def test_div_positive_float_rounding():
     a = TF2Currency(metal=1.0, rounding_mode=RoundingMode.ROUND)
-    assert (a / 1.5)._weapons == 12
-    assert (a / 1.4)._weapons == 13
+    assert (a / 1.5).to_weapons(66.0) == 12
+    assert (a / 1.4).to_weapons(66.0) == 13
     
     b = TF2Currency(metal=1.0, rounding_mode=RoundingMode.FLOOR)
-    assert (b / 1.4)._weapons == 12
+    assert (b / 1.4).to_weapons(66.0) == 12
     
     c = TF2Currency(metal=1.0, rounding_mode=RoundingMode.CEIL)
-    assert (c / 1.4)._weapons == 13
+    assert (c / 1.4).to_weapons(66.0) == 13
 
 def test_div_zero():
     a = TF2Currency(metal=1.0)

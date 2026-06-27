@@ -27,64 +27,52 @@ class TF2Currency:
     def __post_init__(self) -> None:
         if math.isnan(self.metal) or math.isinf(self.metal):
             raise TF2ValidationError("metal must be a finite number.")
-        if self.keys != 0 and self.key_price_ref == 0.0:
-            raise TF2ValidationError("Cannot specify keys when key_price_ref is not set.")
         if self.key_price_ref < 0 or math.isnan(self.key_price_ref) or math.isinf(self.key_price_ref):
             raise TF2ValidationError("key_price_ref must be a finite non-negative number.")
         if self.key_price_usd is not None and (self.key_price_usd < 0 or math.isnan(self.key_price_usd) or math.isinf(self.key_price_usd)):
             raise TF2ValidationError("key_price_usd must be a finite non-negative number.")
-            
-        key_price_in_weapons = 0
-        if self.keys != 0:
-            key_price_in_weapons = int(self.metal_to_weapons(self.key_price_ref, self.rounding_mode))
-            
-        _weapons = self.keys * key_price_in_weapons + self.metal_to_weapons(self.metal, self.rounding_mode)
-        object.__setattr__(self, "_weapons", _weapons)
+
+    def to_weapons(self, key_price_ref: float | None = None) -> int:
+        price_ref = key_price_ref if key_price_ref is not None else self.key_price_ref
+        if self.keys != 0 and price_ref == 0.0:
+            raise TF2ValidationError("Cannot calculate weapons with keys when key_price_ref is not set.")
+        key_price_in_weapons = int(self.metal_to_weapons(price_ref, self.rounding_mode)) if self.keys != 0 else 0
+        return self.keys * key_price_in_weapons + self.metal_to_weapons(self.metal, self.rounding_mode)
 
     def breakdown(self) -> dict[str, int]:
         from tf2_metal.constants import WEAPONS_PER_REF, WEAPONS_PER_RECLAIMED, WEAPONS_PER_SCRAP
         
-        is_neg = self._weapons < 0
-        rem = abs(self._weapons)
-        
         result = {}
+        if self.keys != 0:
+            result["keys"] = self.keys
+            
+        weapons = self.metal_to_weapons(self.metal, self.rounding_mode)
+        is_neg = weapons < 0
+        rem = abs(weapons)
         
-        if self.key_price_ref > 0:
-            key_price_in_weapons = int(self.metal_to_weapons(self.key_price_ref, self.rounding_mode))
-            if key_price_in_weapons > 0:
-                result["keys"] = rem // key_price_in_weapons
-                rem = rem % key_price_in_weapons
-
-        result["refined"] = rem // WEAPONS_PER_REF
+        refined = rem // WEAPONS_PER_REF
         rem = rem % WEAPONS_PER_REF
-        
-        result["reclaimed"] = rem // WEAPONS_PER_RECLAIMED
+        reclaimed = rem // WEAPONS_PER_RECLAIMED
         rem = rem % WEAPONS_PER_RECLAIMED
-        
-        result["scrap"] = rem // WEAPONS_PER_SCRAP
+        scrap = rem // WEAPONS_PER_SCRAP
         rem = rem % WEAPONS_PER_SCRAP
         
-        result["weapons"] = rem
-        
         if is_neg:
-            for k in ["keys", "refined", "reclaimed", "scrap", "weapons"]:
-                if k in result and result[k] != 0:
-                    result[k] = -result[k]
-                    break
-                    
+            refined = -refined
+            reclaimed = -reclaimed
+            scrap = -scrap
+            rem = -rem
+            
+        result["refined"] = refined
+        result["reclaimed"] = reclaimed
+        result["scrap"] = scrap
+        result["weapons"] = rem
+            
         return result
-    def __str__(self) -> str:
-        from tf2_metal.constants import WEAPONS_PER_REF
-        
-        if self._weapons == 0:
-            return "0 ref"
 
-        abs_w = abs(self._weapons)
-        
-        if self.key_price_ref == 0.0 and abs_w < WEAPONS_PER_REF:
-            float_val = round(abs_w / WEAPONS_PER_REF, 2)
-            prefix = "-" if self._weapons < 0 else ""
-            return f"{prefix}{float_val} ref"
+    def __str__(self) -> str:
+        if self.keys == 0 and self.metal == 0.0:
+            return "0 ref"
 
         bd = self.breakdown()
         
@@ -105,21 +93,16 @@ class TF2Currency:
                 name = sing if abs_val == 1 else plur
                 components.append(f"{val} {name}")
                 
+        if not components:
+            return "0 ref"
         return ", ".join(components)
 
     @classmethod
     def from_weapons(cls, weapons: int, rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
         from tf2_metal.constants import WEAPONS_PER_REF
-        inst = cls.__new__(cls)
-        object.__setattr__(inst, "keys", 0)
-        object.__setattr__(inst, "metal", weapons / WEAPONS_PER_REF)
-        object.__setattr__(inst, "rounding_mode", rounding_mode)
-        object.__setattr__(inst, "key_price_ref", key_price_ref)
-        object.__setattr__(inst, "key_price_usd", key_price_usd)
-        object.__setattr__(inst, "_weapons", weapons)
-        return inst
+        return cls(keys=0, metal=weapons / WEAPONS_PER_REF, rounding_mode=rounding_mode, key_price_ref=key_price_ref, key_price_usd=key_price_usd)
 
-    def _check_prices(self, other: "TF2Currency") -> tuple[float, float]:
+    def _check_prices(self, other: "TF2Currency") -> tuple[float, float | None]:
         if self.key_price_ref != 0.0 and other.key_price_ref != 0.0 and self.key_price_ref != other.key_price_ref:
             raise TF2ValidationError("Cannot perform operations on currencies with different key prices.")
         if self.key_price_usd is not None and other.key_price_usd is not None and self.key_price_usd != other.key_price_usd:
@@ -133,15 +116,25 @@ class TF2Currency:
         if not isinstance(other, TF2Currency):
             return NotImplemented
         res_ref, res_usd = self._check_prices(other)
-        new_weapons = self._weapons + other._weapons
-        return self.from_weapons(new_weapons, self.rounding_mode, res_ref, res_usd)
+        return TF2Currency(
+            keys=self.keys + other.keys,
+            metal=self.metal + other.metal,
+            rounding_mode=self.rounding_mode,
+            key_price_ref=res_ref,
+            key_price_usd=res_usd
+        )
 
     def __sub__(self, other: "TF2Currency") -> "TF2Currency":
         if not isinstance(other, TF2Currency):
             return NotImplemented
         res_ref, res_usd = self._check_prices(other)
-        new_weapons = self._weapons - other._weapons
-        return self.from_weapons(new_weapons, self.rounding_mode, res_ref, res_usd)
+        return TF2Currency(
+            keys=self.keys - other.keys,
+            metal=self.metal - other.metal,
+            rounding_mode=self.rounding_mode,
+            key_price_ref=res_ref,
+            key_price_usd=res_usd
+        )
 
     def __mul__(self, scalar: int | float) -> "TF2Currency":
         if not isinstance(scalar, (int, float)):
@@ -149,19 +142,23 @@ class TF2Currency:
         if isinstance(scalar, float) and (math.isnan(scalar) or math.isinf(scalar)):
             raise TF2ValidationError("Scalar cannot be NaN or infinity.")
         
-        raw = self._weapons * scalar
+        raw_keys = self.keys * scalar
+        int_keys = int(raw_keys)
+        frac_keys = raw_keys - int_keys
         
-        from tf2_metal.constants import RoundingMode
-        if self.rounding_mode == RoundingMode.ROUND:
-            new_weapons = round(raw)
-        elif self.rounding_mode == RoundingMode.FLOOR:
-            new_weapons = math.floor(raw)
-        elif self.rounding_mode == RoundingMode.CEIL:
-            new_weapons = math.ceil(raw)
-        else:
-            raise ValueError(f"Unsupported rounding mode: {self.rounding_mode}")
+        new_metal = self.metal * scalar
+        if frac_keys != 0:
+            if self.key_price_ref == 0.0:
+                raise TF2ValidationError("Cannot multiply keys to a fractional amount without key_price_ref.")
+            new_metal += frac_keys * self.key_price_ref
             
-        return self.from_weapons(new_weapons, self.rounding_mode, self.key_price_ref, self.key_price_usd)
+        return TF2Currency(
+            keys=int_keys,
+            metal=new_metal,
+            rounding_mode=self.rounding_mode,
+            key_price_ref=self.key_price_ref,
+            key_price_usd=self.key_price_usd
+        )
 
     def __rmul__(self, scalar: int | float) -> "TF2Currency":
         return self.__mul__(scalar)
@@ -174,39 +171,56 @@ class TF2Currency:
         if isinstance(scalar, float) and (math.isnan(scalar) or math.isinf(scalar)):
             raise TF2ValidationError("Scalar cannot be NaN or infinity.")
             
-        raw = self._weapons / scalar
+        raw_keys = self.keys / scalar
+        int_keys = int(raw_keys)
+        frac_keys = raw_keys - int_keys
         
-        from tf2_metal.constants import RoundingMode
-        if self.rounding_mode == RoundingMode.ROUND:
-            new_weapons = round(raw)
-        elif self.rounding_mode == RoundingMode.FLOOR:
-            new_weapons = math.floor(raw)
-        elif self.rounding_mode == RoundingMode.CEIL:
-            new_weapons = math.ceil(raw)
-        else:
-            raise ValueError(f"Unsupported rounding mode: {self.rounding_mode}")
+        new_metal = self.metal / scalar
+        if frac_keys != 0:
+            if self.key_price_ref == 0.0:
+                raise TF2ValidationError("Cannot divide keys to a fractional amount without key_price_ref.")
+            new_metal += frac_keys * self.key_price_ref
             
-        return self.from_weapons(new_weapons, self.rounding_mode, self.key_price_ref, self.key_price_usd)
+        return TF2Currency(
+            keys=int_keys,
+            metal=new_metal,
+            rounding_mode=self.rounding_mode,
+            key_price_ref=self.key_price_ref,
+            key_price_usd=self.key_price_usd
+        )
 
     def __lt__(self, other: "TF2Currency") -> bool:
         if not isinstance(other, TF2Currency):
             return NotImplemented
-        return self._weapons < other._weapons
+        if self.keys != other.keys:
+            return self.keys < other.keys
+        return self.metal < other.metal
 
     def __le__(self, other: "TF2Currency") -> bool:
         if not isinstance(other, TF2Currency):
             return NotImplemented
-        return self._weapons <= other._weapons
+        if self.keys != other.keys:
+            return self.keys < other.keys
+        return self.metal <= other.metal
 
     def __gt__(self, other: "TF2Currency") -> bool:
         if not isinstance(other, TF2Currency):
             return NotImplemented
-        return self._weapons > other._weapons
+        if self.keys != other.keys:
+            return self.keys > other.keys
+        return self.metal > other.metal
 
     def __ge__(self, other: "TF2Currency") -> bool:
         if not isinstance(other, TF2Currency):
             return NotImplemented
-        return self._weapons >= other._weapons
+        if self.keys != other.keys:
+            return self.keys > other.keys
+        return self.metal >= other.metal
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TF2Currency):
+            return NotImplemented
+        return self.keys == other.keys and self.metal == other.metal
 
     @staticmethod
     def from_string(s: str, rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
@@ -230,35 +244,19 @@ class TF2Currency:
         keys_val = float(keys_str) if keys_str is not None else 0.0
         metal_val = float(metal_str) if metal_str is not None else 0.0
         
-        if keys_val != 0 and key_price_ref == 0.0:
-            raise TF2ValidationError("Cannot specify keys in string when key_price_ref is not set.")
-            
         int_keys = int(keys_val)
         frac_keys = keys_val - int_keys
         
-        final_metal = metal_val + (frac_keys * key_price_ref)
+        final_metal = metal_val
+        if frac_keys != 0:
+            if key_price_ref == 0.0:
+                raise TF2ValidationError("Cannot specify fractional keys in string when key_price_ref is not set.")
+            final_metal += (frac_keys * key_price_ref)
         
         return TF2Currency(keys=int_keys, metal=final_metal, rounding_mode=rounding_mode, key_price_ref=key_price_ref, key_price_usd=key_price_usd)
 
-    def to_weapons(self) -> int:
-        return self._weapons
-
     def to_dict(self) -> dict[str, int | float]:
-        from tf2_metal.constants import WEAPONS_PER_REF
-        
-        if self.key_price_ref > 0:
-            key_price_in_weapons = int(self.metal_to_weapons(self.key_price_ref, self.rounding_mode))
-            
-            if key_price_in_weapons > 0:
-                bd = self.breakdown()
-                keys = bd.get("keys", 0)
-                rem_weapons = self._weapons - (keys * key_price_in_weapons)
-                metal = round(rem_weapons / WEAPONS_PER_REF, 2)
-                return {"keys": keys, "metal": metal}
-        
-        keys = 0
-        metal = round(self._weapons / WEAPONS_PER_REF, 2)
-        return {"keys": keys, "metal": metal}
+        return {"keys": self.keys, "metal": round(self.metal, 2)}
 
     @classmethod
     def from_dict(cls, data: dict[str, int | float], rounding_mode: RoundingMode = RoundingMode.ROUND, key_price_ref: float = 0.0, key_price_usd: float | None = None) -> "TF2Currency":
@@ -275,12 +273,13 @@ class TF2Currency:
         if not isinstance(metal_val, (int, float)) or isinstance(metal_val, bool):
             raise TF2ValidationError("'metal' must be numeric.")
             
-        if keys_val != 0 and key_price_ref == 0.0:
-            raise TF2ValidationError("Cannot specify keys when key_price_ref is not set.")
-            
         int_keys = int(keys_val)
         frac_keys = keys_val - int_keys
         
-        final_metal = metal_val + (frac_keys * key_price_ref)
+        final_metal = float(metal_val)
+        if frac_keys != 0:
+            if key_price_ref == 0.0:
+                raise TF2ValidationError("Cannot specify fractional keys when key_price_ref is not set.")
+            final_metal += (frac_keys * key_price_ref)
         
         return cls(keys=int_keys, metal=final_metal, rounding_mode=rounding_mode, key_price_ref=key_price_ref, key_price_usd=key_price_usd)

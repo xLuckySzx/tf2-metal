@@ -48,4 +48,4 @@ def test_arithmetic_one_zero_price():
     c2 = TF2Currency(metal=10.0, key_price_ref=0.0)
     c3 = c1 + c2
     assert c3.key_price_ref == 60.0
-    assert c3._weapons == c1._weapons + c2._weapons
+    assert c3.to_weapons(60.0) == c1.to_weapons(60.0) + c2.to_weapons(60.0)

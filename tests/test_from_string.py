@@ -27,7 +27,7 @@ def test_from_string_alternative_format():
 
 def test_from_string_fractional_keys():
     curr = TF2Currency.from_string("1.5 keys", key_price_ref=66.0)
-    assert curr._weapons == 1782
+    assert curr.to_weapons(66.0) == 1782
 
 def test_from_string_empty():
     with pytest.raises(TF2ValidationError):
@@ -42,13 +42,13 @@ def test_from_string_gibberish():
         TF2Currency.from_string("gibberish xyz 123abc")
 
 def test_from_string_keys_no_price():
-    with pytest.raises(TF2ValidationError):
-        TF2Currency.from_string("2 keys")
+    curr = TF2Currency.from_string("2 keys")
+    assert curr.keys == 2
 
 def test_from_string_rounding_mode():
     curr = TF2Currency.from_string("1.4 ref", rounding_mode=RoundingMode.FLOOR)
     assert curr.rounding_mode == RoundingMode.FLOOR
-    assert curr._weapons == 25
+    assert curr.to_weapons(66.0) == 25
 
 def test_from_string_negative_values():
     curr = TF2Currency.from_string("-2 keys, -1.33 ref", key_price_ref=66.0)
@@ -56,4 +56,4 @@ def test_from_string_negative_values():
     assert curr.metal == -1.33
     
     curr2 = TF2Currency.from_string("-1.5 keys", key_price_ref=66.0)
-    assert curr2._weapons == -1782
+    assert curr2.to_weapons(66.0) == -1782

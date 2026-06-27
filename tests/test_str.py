@@ -45,7 +45,7 @@ def test_str_singular_reclaimed():
 
 def test_str_sub_ref():
     curr = TF2Currency(metal=0.33)
-    assert str(curr) in ("0.33 ref", "0.3333333333333333 ref")
+    assert str(curr) in ("1 reclaimed")
 
 def test_str_negative():
     curr = TF2Currency(metal=-1.0)

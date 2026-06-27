@@ -10,11 +10,11 @@ from tf2_metal.exceptions import TF2ValidationError
 
 def test_nominal_construction_metal_only():
     curr = TF2Currency(metal=18.0)
-    assert curr._weapons == 324
+    assert curr.to_weapons(66.0) == 324
 
 def test_nominal_construction_with_keys():
     curr = TF2Currency(keys=1, key_price_ref=66.0)
-    assert curr._weapons == 1188
+    assert curr.to_weapons(66.0) == 1188
 
 def test_metal_to_weapons_rounding():
     assert TF2Currency.metal_to_weapons(1.5, RoundingMode.ROUND) == 27
@@ -25,8 +25,8 @@ def test_metal_to_weapons_rounding():
     assert TF2Currency.metal_to_weapons(1.6, RoundingMode.CEIL) == 29
 
 def test_keys_without_price():
-    with pytest.raises(TF2ValidationError):
-        TF2Currency(keys=1)
+    curr = TF2Currency(keys=1)
+    assert curr.keys == 1
 
 def test_invalid_metal_values():
     with pytest.raises(TF2ValidationError):
@@ -50,10 +50,10 @@ def test_hashing():
 
 def test_negative_values():
     curr1 = TF2Currency(metal=-1.33)
-    assert curr1._weapons < 0
+    assert curr1.to_weapons(66.0) < 0
 
     curr2 = TF2Currency(keys=-1, metal=0.0, key_price_ref=66.0)
-    assert curr2._weapons < 0
+    assert curr2.to_weapons(66.0) < 0
 
 def test_to_weapons():
     curr = TF2Currency(metal=1.0)
@@ -70,7 +70,7 @@ def test_from_weapons():
     curr2 = TF2Currency.from_weapons(1206, key_price_ref=66.0)
     assert curr2.keys == 0
     assert curr2.metal == 67.0
-    assert curr2._weapons == 1206
+    assert curr2.to_weapons(66.0) == 1206
 
 def test_to_weapons_edge_cases():
     assert TF2Currency(metal=0.0).to_weapons() == 0
@@ -84,13 +84,13 @@ def test_from_weapons_edge_cases():
     curr = TF2Currency.from_weapons(0)
     assert curr.keys == 0
     assert curr.metal == 0.0
-    assert curr._weapons == 0
+    assert curr.to_weapons(66.0) == 0
     
     curr2 = TF2Currency.from_weapons(-18)
     assert curr2.keys == 0
     assert curr2.metal == -1.0
-    assert curr2._weapons == -18
+    assert curr2.to_weapons(66.0) == -18
     
     curr3 = TF2Currency.from_weapons(1800000)
     assert curr3.metal == 100000.0
-    assert curr3._weapons == 1800000
+    assert curr3.to_weapons(66.0) == 1800000

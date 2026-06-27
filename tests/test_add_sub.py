@@ -6,19 +6,19 @@ def test_add_positive():
     a = TF2Currency(metal=1.0)
     b = TF2Currency(metal=2.0)
     c = a + b
-    assert c._weapons == a._weapons + b._weapons
+    assert c.to_weapons(66.0) == a.to_weapons(66.0) + b.to_weapons(66.0)
 
 def test_sub_positive():
     a = TF2Currency(metal=3.0)
     b = TF2Currency(metal=1.0)
     c = a - b
-    assert c._weapons == 36
+    assert c.to_weapons(66.0) == 36
 
 def test_sub_negative():
     a = TF2Currency(metal=1.0)
     b = TF2Currency(metal=3.0)
     c = a - b
-    assert c._weapons == -36
+    assert c.to_weapons(66.0) == -36
 
 def test_rounding_mode_preserved():
     a = TF2Currency(metal=1.0, rounding_mode=RoundingMode.FLOOR)
@@ -43,7 +43,7 @@ def test_add_zero():
     a = TF2Currency(metal=1.33)
     b = TF2Currency()
     c = a + b
-    assert c._weapons == a._weapons
+    assert c.to_weapons(66.0) == a.to_weapons(66.0)
     assert c is not a
 
 def test_new_instance():
