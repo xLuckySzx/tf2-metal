@@ -112,29 +112,68 @@ class TF2Currency:
         res_usd = self.key_price_usd if self.key_price_usd is not None else other.key_price_usd
         return res_ref, res_usd
 
+    def normalized(self) -> "TF2Currency":
+        """
+        Normalizza la valuta combinando keys e metal grezzi in un formato standard.
+        Risolve casi come '1 key, -54 ref' o '0 keys, 70 ref' quando il key_price è 60 ref.
+        """
+        if self.key_price_ref == 0.0:
+            # Senza key price non possiamo convertire metal <-> keys
+            return self
+            
+        from tf2_metal.constants import WEAPONS_PER_REF
+        
+        total_weapons = self.to_weapons(self.key_price_ref)
+        key_price_in_weapons = int(self.metal_to_weapons(self.key_price_ref, self.rounding_mode))
+        
+        if key_price_in_weapons == 0:
+            return self
+            
+        is_neg = total_weapons < 0
+        abs_weapons = abs(total_weapons)
+        
+        norm_keys = abs_weapons // key_price_in_weapons
+        rem_weapons = abs_weapons % key_price_in_weapons
+        
+        if is_neg:
+            norm_keys = -norm_keys
+            rem_weapons = -rem_weapons
+            
+        norm_metal = rem_weapons / WEAPONS_PER_REF
+        
+        return TF2Currency(
+            keys=norm_keys,
+            metal=norm_metal,
+            rounding_mode=self.rounding_mode,
+            key_price_ref=self.key_price_ref,
+            key_price_usd=self.key_price_usd
+        )
+
     def __add__(self, other: "TF2Currency") -> "TF2Currency":
         if not isinstance(other, TF2Currency):
             return NotImplemented
         res_ref, res_usd = self._check_prices(other)
-        return TF2Currency(
+        res = TF2Currency(
             keys=self.keys + other.keys,
             metal=self.metal + other.metal,
             rounding_mode=self.rounding_mode,
             key_price_ref=res_ref,
             key_price_usd=res_usd
         )
+        return res.normalized()
 
     def __sub__(self, other: "TF2Currency") -> "TF2Currency":
         if not isinstance(other, TF2Currency):
             return NotImplemented
         res_ref, res_usd = self._check_prices(other)
-        return TF2Currency(
+        res = TF2Currency(
             keys=self.keys - other.keys,
             metal=self.metal - other.metal,
             rounding_mode=self.rounding_mode,
             key_price_ref=res_ref,
             key_price_usd=res_usd
         )
+        return res.normalized()
 
     def __mul__(self, scalar: int | float) -> "TF2Currency":
         if not isinstance(scalar, (int, float)):
